@@ -1,7 +1,7 @@
 # boostcourse-backend-project-A
 
 ##  프로젝트 개요
- CLI(Command Line Interface)를 사용하는 명함관리 프로그램을 만드는 것입니다.
+ CLI(Command Line Interface)를 사용하는 명함관리 프로그램을 만드는 것입니다.<br>
  터미널(윈도우는 cmd창)상에서 동작하는 프로그램을 작성해야 합니다.
 
 ## 기획
