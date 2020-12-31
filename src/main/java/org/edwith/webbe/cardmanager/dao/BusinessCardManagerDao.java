@@ -8,37 +8,37 @@ import java.util.List;
 import java.util.Optional;
 
 public class BusinessCardManagerDao {
-    private static Connection conn;
-    private static PreparedStatement ps;
-    private static ResultSet rs;
 
     public List<BusinessCard> searchBusinessCard(String keyword) {
         List<BusinessCard> list = new ArrayList<>();
-        conn = getConnection();
-        try {
-            ps = conn.prepareStatement("select * from cards where name like ?");
+
+        try (Connection conn = getConnection();
+            PreparedStatement ps = conn
+                .prepareStatement("select * from cards where name like ?");) {
             ps.setString(1, "%" + keyword + "%");
-            rs = ps.executeQuery();
-            getCards(list);
+            getCards(list, ps);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        close(conn, ps, rs);
         return list;
     }
 
-    private void getCards(List<BusinessCard> list) throws SQLException {
-        while (rs.next()) {
-            BusinessCard vo = new BusinessCard(rs.getString(1), rs.getString(2), rs.getString(3));
-            list.add(vo);
+    private void getCards(List<BusinessCard> list, PreparedStatement ps) throws SQLException {
+        try (ResultSet rs = ps.executeQuery();) {
+            while (rs.next()) {
+                BusinessCard vo = new BusinessCard(rs.getString(1), rs.getString(2),
+                    rs.getString(3));
+                list.add(vo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public void addBusinessCard(BusinessCard businessCard) {
-        conn = getConnection();
-        try {
-            ps = conn.prepareStatement("insert into cards " +
-                    "(name,phone,company_name,created_at) values(?,?,?,?)");
+        try (Connection conn = getConnection();
+            PreparedStatement ps = conn.prepareStatement("insert into cards " +
+                "(name,phone,company_name,created_at) values(?,?,?,?)");) {
             ps.setString(1, businessCard.getName());
             ps.setString(2, businessCard.getPhone());
             ps.setString(3, businessCard.getCompanyName());
@@ -47,13 +47,12 @@ public class BusinessCardManagerDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        close(conn, ps, rs);
     }
 
     public static Connection getConnection() {
-        String url = "jdbc:mysql://localhost:3306/card_manager";
+        String url = "jdbc:mysql://localhost:3306/card_manager?&serverTimezone=UTC";
         String user = "root";
-        String password = "ssu";
+        String password = "password";
         Connection conn = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -62,44 +61,5 @@ public class BusinessCardManagerDao {
             e.printStackTrace();
         }
         return conn;
-    }
-
-    public static void close(Connection conn, PreparedStatement ps, ResultSet rs) {
-        closePreparedStatement(ps);
-        closeConnection(conn);
-        closeResultSet(rs);
-    }
-
-    private static void closeResultSet(ResultSet rs) {
-        Optional.ofNullable(rs)
-                .ifPresent(resultSet -> {
-                    try {
-                        resultSet.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
-    }
-
-    private static void closeConnection(Connection conn) {
-        Optional.ofNullable(conn)
-                .ifPresent(connection -> {
-                    try {
-                        connection.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
-    }
-
-    private static void closePreparedStatement(PreparedStatement ps) {
-        Optional.ofNullable(ps)
-                .ifPresent(preparedStatement -> {
-                    try {
-                        preparedStatement.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
     }
 }
