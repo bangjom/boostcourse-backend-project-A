@@ -3,6 +3,7 @@ package org.edwith.webbe.cardmanager.dao;
 import org.edwith.webbe.cardmanager.dto.BusinessCard;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,8 +14,8 @@ public class BusinessCardManagerDao {
         List<BusinessCard> list = new ArrayList<>();
 
         try (Connection conn = getConnection();
-            PreparedStatement ps = conn
-                .prepareStatement("select * from cards where name like ?");) {
+             PreparedStatement ps = conn
+                     .prepareStatement("select * from cards where name like ?");) {
             ps.setString(1, "%" + keyword + "%");
             getCards(list, ps);
         } catch (SQLException e) {
@@ -27,7 +28,7 @@ public class BusinessCardManagerDao {
         try (ResultSet rs = ps.executeQuery();) {
             while (rs.next()) {
                 BusinessCard vo = new BusinessCard(rs.getString(1), rs.getString(2),
-                    rs.getString(3));
+                        rs.getString(3), rs.getTimestamp(4).toLocalDateTime());
                 list.add(vo);
             }
         } catch (SQLException e) {
@@ -37,12 +38,12 @@ public class BusinessCardManagerDao {
 
     public void addBusinessCard(BusinessCard businessCard) {
         try (Connection conn = getConnection();
-            PreparedStatement ps = conn.prepareStatement("insert into cards " +
-                "(name,phone,company_name,created_at) values(?,?,?,?)");) {
+             PreparedStatement ps = conn.prepareStatement("insert into cards " +
+                     "(name,phone,company_name,created_at) values(?,?,?,?)");) {
             ps.setString(1, businessCard.getName());
             ps.setString(2, businessCard.getPhone());
             ps.setString(3, businessCard.getCompanyName());
-            ps.setDate(4, new java.sql.Date(businessCard.getCreateDate().getTime()));
+            ps.setDate(4, java.sql.Date.valueOf(businessCard.getCreateDate().toLocalDate()));
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -52,7 +53,7 @@ public class BusinessCardManagerDao {
     public static Connection getConnection() {
         String url = "jdbc:mysql://localhost:3306/card_manager?&serverTimezone=UTC";
         String user = "root";
-        String password = "password";
+        String password = "";
         Connection conn = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
